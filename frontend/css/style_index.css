@@ -184,6 +184,7 @@ p {
   /* Empurra para a direita */
 }
 
+
 .create-post {
   background: var(--bg-card);
   border-radius: var(--radius-lg);
@@ -208,30 +209,50 @@ p {
 
 .post-input textarea {
   flex: 1;
-  min-height: 60px;
-  padding: var(--space-md) var(--space-lg);
-  border: 1px solid var(--border-light);
-  border-radius: var(--radius-lg);
-  font-size: 1rem;
-  background-color: var(--bg-input);
+  min-height: 80px;
+  padding: var(--space-lg);
+  border: 2px solid var(--border-light);
+  border-radius: var(--radius-xl);
+  font-size: 1.1rem;
+  background: linear-gradient(135deg, var(--bg-input) 0%, rgba(255, 87, 34, 0.02) 100%);
   color: var(--text-light);
   transition: all var(--transition-normal);
   resize: vertical;
   font-family: inherit;
+  line-height: 1.5;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .post-input textarea:focus {
   border-color: var(--color-primary);
   outline: none;
-  background-color: var(--bg-hover);
+  background: var(--bg-hover);
+  box-shadow: 0 0 0 3px rgba(255, 87, 34, 0.1), 0 4px 12px rgba(0, 0, 0, 0.15);
+  transform: translateY(-1px);
+}
+
+.post-input textarea::placeholder {
+  color: var(--text-muted);
+  font-style: italic;
 }
 
 .post-actions {
   display: flex;
-  gap: var(--space-md);
+  justify-content: space-between;
+  /* Isso vai separar os grupos */
+  align-items: center;
   border-top: 1px solid var(--border-light);
   padding-top: var(--space-lg);
-  flex-wrap: wrap;
+  width: 100%;
+}
+
+.post-actions .left-actions {
+  display: flex;
+  gap: var(--space-md);
+}
+
+.post-actions> :not(.delete-btn) {
+  margin-right: auto;
 }
 
 .post-actions button {
@@ -247,24 +268,29 @@ p {
   gap: var(--space-sm);
   font-family: inherit;
   font-size: 0.9rem;
-
+  padding: var(--space-sm) var(--space-md);
 }
 
 .post-actions button:hover {
-  background: transparent !important;
+  background: rgba(255, 87, 34, 0.1) !important;
   color: var(--color-primary) !important;
-  transform: scale(1.1) !important;
+  transform: scale(1.05) !important;
 }
 
-
-
 .post-actions .publish-btn {
-  background-color: var(--color-primary);
-  color: var(--text-light);
+  margin-left: auto;
+  padding: 5px 10px;
+  /* Remove all other styles */
+  background: transparent !important;
+  box-shadow: none !important;
+  color: var(--text-secondary) !important;
+  border: none !important;
 }
 
 .post-actions .publish-btn:hover {
-  background-color: var(--color-primary-dark);
+  background: linear-gradient(135deg, var(--color-primary-dark) 0%, var(--color-primary) 100%) !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 6px 16px rgba(255, 87, 34, 0.4) !important;
 }
 
 .posts {
@@ -280,6 +306,7 @@ p {
   border: 1px solid var(--border-light);
   box-shadow: var(--shadow-sm);
   transition: transform var(--transition-normal), box-shadow var(--transition-normal);
+  position: relative;
 }
 
 .post:hover {
@@ -291,7 +318,6 @@ p {
   display: flex;
   gap: var(--space-md);
   margin-bottom: var(--space-md);
-
 }
 
 .profile-pic {
@@ -313,6 +339,7 @@ p {
   justify-content: space-between;
   width: 100%;
   display: flex;
+  align-items: flex-start;
 }
 
 .post-info p {
@@ -348,6 +375,115 @@ p {
   color: var(--text-muted);
   padding: var(--space-xl);
 }
+
+.post-actions {
+  display: flex;
+  gap: var(--space-md);
+  border-top: 1px solid var(--border-light);
+  padding-top: var(--space-lg);
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.post-actions button {
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  border-radius: var(--radius-md);
+  transition: all var(--transition-normal);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-sm);
+  font-family: inherit;
+  font-size: 0.9rem;
+  padding: var(--space-sm);
+  min-width: auto;
+}
+
+.post-actions .delete-btn i {
+  margin: 0 !important;
+  font-size: 1.1rem !important;
+}
+
+.post-actions .delete-btn {
+  margin-left: auto;
+  background: transparent !important;
+  color: var(--text-secondary) !important;
+  border: none !important;
+  cursor: pointer;
+  padding: var(--space-sm) !important;
+  border-radius: var(--radius-md) !important;
+  transition: all var(--transition-normal) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+/* Substitua o estilo atual do .delete-btn por este: */
+.delete-btn {
+  margin-left: auto !important;
+  /* Isso empurrará para a direita */
+  background: transparent !important;
+  color: var(--text-secondary) !important;
+  border: none !important;
+  cursor: pointer;
+  padding: var(--space-sm) !important;
+  border-radius: var(--radius-md) !important;
+  transition: all var(--transition-normal) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+.post-actions .delete-btn:hover {
+  background: transparent !important;
+  color: var(--color-primary) !important;
+  transform: scale(1.1) !important;
+}
+
+.delete-btn i {
+  margin: 0 !important;
+  font-size: 1.1rem !important;
+}
+.post-actions .share-btn {
+  display: flex !important;
+}
+.post-actions button {
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  border-radius: var(--radius-md);
+  transition: all var(--transition-normal);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-sm);
+  font-family: inherit;
+  font-size: 0.9rem;
+  padding: var(--space-sm);
+  min-width: auto;
+}
+
+.post-actions button:hover {
+  background: transparent !important;
+  color: var(--color-primary) !important;
+  transform: scale(1.1) !important;
+}
+
+
+.post-actions button i {
+  font-size: 1.1rem;
+  margin-right: 6px;
+}
+
+.post-actions button:nth-child(3) {
+  display: none;
+}
+
 
 /* --------------------------------------------------------------------------
    11. Utilities
@@ -559,11 +695,8 @@ footer {
     transition: all 0.2s ease;
     transform: none !important;
   }
-}
 
-.post-actions button i {
-  font-size: 1.1rem;
-  margin-right: 6px;
+
 }
 
 @media (max-width: 480px) {
@@ -587,12 +720,6 @@ footer {
   }
 }
 
-
-
-
-
-
-
 /* Adicione isso no final do arquivo */
 .post-actions .like-btn.liked {
   color: var(--color-primary) !important;
@@ -601,8 +728,6 @@ footer {
 .post-actions .like-btn.liked i {
   color: inherit;
 }
-
-
 
 /* Add these styles to your existing CSS */
 
@@ -783,10 +908,19 @@ footer {
   color: var(--text-muted);
   cursor: pointer;
   padding: 4px;
+  z-index: 1001;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-normal);
 }
 
 .close-button:hover {
   color: var(--color-primary);
+  background: var(--bg-hover);
 }
 
 /* Animations */

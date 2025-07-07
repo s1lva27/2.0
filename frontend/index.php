@@ -61,9 +61,19 @@ function getPollData($con, $publicacaoId, $userId = null)
             ORDER BY po.ordem ASC";
     
     $stmt = $con->prepare($sql);
+    if (!$stmt) {
+        error_log("Failed to prepare poll data query: " . $con->error);
+        return null;
+    }
+    
     $stmt->bind_param("i", $publicacaoId);
     $stmt->execute();
     $result = $stmt->get_result();
+
+    if ($result === false) {
+        error_log("Failed to get result for poll data: " . $stmt->error);
+        return null;
+    }
 
     if ($result->num_rows === 0) {
         return null;
@@ -96,7 +106,7 @@ function getPollData($con, $publicacaoId, $userId = null)
     $userVoted = false;
     $userVotedOption = null;
     
-    if ($userId > 0) {
+    if ($userId > 0 && $pollData) {
         $sqlUserVote = "SELECT opcao_id FROM poll_votos WHERE poll_id = ? AND utilizador_id = ?";
         $stmtUserVote = $con->prepare($sqlUserVote);
         if ($stmtUserVote) {
@@ -104,11 +114,15 @@ function getPollData($con, $publicacaoId, $userId = null)
             $stmtUserVote->execute();
             $voteResult = $stmtUserVote->get_result();
             
-            if ($voteResult->num_rows > 0) {
+            if ($voteResult === false) {
+                error_log("Failed to get result for user vote: " . $stmtUserVote->error);
+            } else if ($voteResult->num_rows > 0) {
                 $userVoted = true;
                 $voteData = $voteResult->fetch_assoc();
                 $userVotedOption = intval($voteData['opcao_id']);
             }
+        } else {
+            error_log("Failed to prepare user vote query: " . $con->error);
         }
     }
 
@@ -143,6 +157,37 @@ $perfilData = mysqli_fetch_assoc($resultPerfil);
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
+        .media-preview-item {
+    position: relative;
+    display: inline-block;
+    margin: 5px;
+}
+
+.preview-media {
+    max-width: 150px;
+    max-height: 150px;
+    border-radius: 8px;
+    object-fit: cover;
+}
+
+.remove-media-btn {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background: red;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+    font-size: 12px;
+    line-height: 1;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
         .no-comments {
             text-align: center;
             padding: 20px;
@@ -305,7 +350,6 @@ $perfilData = mysqli_fetch_assoc($resultPerfil);
                     <button type="button" onclick="document.getElementById('media1').click()">
                         <i class="fas fa-video"></i>
                     </button>
-                    <button type="button"><i class="fas fa-poll"></i></button>
                     <button type="submit" name="publicar" class="publish-btn">Publicar</button>
                 </div>
 
@@ -386,7 +430,7 @@ $perfilData = mysqli_fetch_assoc($resultPerfil);
                                 <?php if ($linha['tipo'] === 'poll'): ?>
                                     <?php 
                                     $pollData = getPollData($con, $linha['id_publicacao'], $_SESSION['id']);
-                                    if ($pollData): 
+                                    if (is_array($pollData) && array_key_exists('poll', $pollData) && is_array($pollData['poll'])): 
                                     ?>
                                         <div class="poll-container" data-poll-id="<?php echo $pollData['poll']['id']; ?>">
                                             <div class="poll-question"><?php echo htmlspecialchars($pollData['poll']['pergunta']); ?></div>
@@ -470,29 +514,28 @@ $perfilData = mysqli_fetch_assoc($resultPerfil);
                                 <?php endif; ?>
                             </div>
                             <div class="post-actions">
-                                <button class="like-btn <?php echo $likedClass; ?>"
-                                    data-publicacao-id="<?php echo $publicacaoId; ?>">
-                                    <i class="fas fa-thumbs-up"></i>
-                                    <span class="like-count"><?php echo $linha['likes']; ?></span>
-                                </button>
-                                <button class="comment-btn" onclick="openCommentsModal(<?php echo $linha['id_publicacao']; ?>)">
-                                    <i class="fas fa-comment"></i>
-                                    <span
-                                        class="comment-count"><?php echo getCommentCount($con, $linha['id_publicacao']); ?></span>
-                                </button>
-                                <button class="share-btn" onclick="openShareModal(<?php echo $publicacaoId; ?>)">
-                                    <i class="fas fa-share"></i>
-                                </button>
-                                <button class="save-btn <?php echo $savedClass; ?>"
-                                    data-publicacao-id="<?php echo $publicacaoId; ?>">
-                                    <i class="fas fa-bookmark"></i>
-                                </button>
-                                <?php if ($_SESSION['id'] == $linha['id_utilizador'] || $_SESSION['id_tipos_utilizador'] == 2): ?>
-                                    <button class="delete-btn" onclick="deletePost(<?php echo $publicacaoId; ?>, this)">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
-                                <?php endif; ?>
-                            </div>
+  <div class="left-actions">
+    <button class="like-btn <?php echo $likedClass; ?>" data-publicacao-id="<?php echo $publicacaoId; ?>">
+      <i class="fas fa-thumbs-up"></i>
+      <span class="like-count"><?php echo $linha['likes']; ?></span>
+    </button>
+    <button class="comment-btn" onclick="openCommentsModal(<?php echo $linha['id_publicacao']; ?>)">
+      <i class="fas fa-comment"></i>
+      <span class="comment-count"><?php echo getCommentCount($con, $linha['id_publicacao']); ?></span>
+    </button>
+    <button class="share-btn" onclick="openShareModal(<?php echo $publicacaoId; ?>)">
+      <i class="fas fa-share"></i>
+    </button>
+    <button class="save-btn <?php echo $savedClass; ?>" data-publicacao-id="<?php echo $publicacaoId; ?>">
+      <i class="fas fa-bookmark"></i>
+    </button>
+  </div>
+  <?php if ($_SESSION['id'] == $linha['id_utilizador'] || $_SESSION['id_tipos_utilizador'] == 2): ?>
+    <button class="delete-btn" onclick="deletePost(<?php echo $publicacaoId; ?>, this)">
+      <i class="fas fa-trash"></i>
+    </button>
+  <?php endif; ?>
+</div>
                         </article>
                         <?php
                     }
@@ -1002,66 +1045,68 @@ $perfilData = mysqli_fetch_assoc($resultPerfil);
                 });
         }
 
-        // Media preview functionality
-        let selectedFiles = [];
+// Media preview functionality
+let selectedFiles = Array(5).fill(null); // Array para 5 arquivos
 
-        function previewMedia(input, index) {
-            const file = input.files[0];
-            if (!file) return;
+function previewMedia(input, index) {
+    const file = input.files[0];
+    if (!file) return;
 
-            selectedFiles[index] = file;
-            updateMediaPreview();
+    selectedFiles[index] = file;
+    updateMediaPreview();
+    
+    // Removemos a abertura automática do próximo input
+    // Isso permite que o usuário escolha quando adicionar mais arquivos
+}
+
+function updateMediaPreview() {
+    const previewContainer = document.getElementById('mediaPreview');
+    const validFiles = selectedFiles.filter(file => file);
+
+    if (validFiles.length === 0) {
+        previewContainer.style.display = 'none';
+        return;
+    }
+
+    previewContainer.style.display = 'block';
+    previewContainer.innerHTML = '';
+
+    validFiles.forEach((file, index) => {
+        const mediaContainer = document.createElement('div');
+        mediaContainer.className = 'media-preview-item';
+        mediaContainer.dataset.index = index;
+
+        if (file.type.startsWith('image/')) {
+            const img = document.createElement('img');
+            img.src = URL.createObjectURL(file);
+            img.className = 'preview-media';
+            mediaContainer.appendChild(img);
+        } else if (file.type.startsWith('video/')) {
+            const video = document.createElement('video');
+            video.src = URL.createObjectURL(file);
+            video.className = 'preview-media';
+            video.controls = true;
+            mediaContainer.appendChild(video);
         }
 
-        function updateMediaPreview() {
-            const previewContainer = document.getElementById('mediaPreview');
-            const validFiles = selectedFiles.filter(file => file);
+        const removeBtn = document.createElement('button');
+        removeBtn.className = 'remove-media-btn';
+        removeBtn.innerHTML = '×';
+        removeBtn.onclick = (e) => {
+            e.stopPropagation();
+            removeMedia(index);
+        };
+        mediaContainer.appendChild(removeBtn);
 
-            if (validFiles.length === 0) {
-                previewContainer.style.display = 'none';
-                return;
-            }
+        previewContainer.appendChild(mediaContainer);
+    });
+}
 
-            previewContainer.style.display = 'block';
-            previewContainer.innerHTML = '';
-
-            validFiles.forEach((file, index) => {
-                const mediaContainer = document.createElement('div');
-                mediaContainer.style.cssText = 'position: relative; display: inline-block; margin: 5px;';
-
-                if (file.type.startsWith('image/')) {
-                    const img = document.createElement('img');
-                    img.src = URL.createObjectURL(file);
-                    img.style.cssText = 'max-width: 150px; max-height: 150px; border-radius: 8px;';
-                    mediaContainer.appendChild(img);
-                } else if (file.type.startsWith('video/')) {
-                    const video = document.createElement('video');
-                    video.src = URL.createObjectURL(file);
-                    video.style.cssText = 'max-width: 150px; max-height: 150px; border-radius: 8px;';
-                    video.controls = true;
-                    mediaContainer.appendChild(video);
-                }
-
-                const removeBtn = document.createElement('button');
-                removeBtn.innerHTML = '×';
-                removeBtn.style.cssText = 'position: absolute; top: -5px; right: -5px; background: red; color: white; border: none; border-radius: 50%; width: 20px; height: 20px; cursor: pointer;';
-                removeBtn.onclick = () => removeMedia(index);
-                mediaContainer.appendChild(removeBtn);
-
-                previewContainer.appendChild(mediaContainer);
-            });
-        }
-
-        function removeMedia(index) {
-            selectedFiles[index] = null;
-            document.getElementById(`media${index}`).value = '';
-            updateMediaPreview();
-        }
-
-        // Initialize video thumbnails after page load
-        document.addEventListener('DOMContentLoaded', function () {
-            initializeVideoThumbnails();
-        });
+function removeMedia(index) {
+    selectedFiles[index] = null;
+    document.getElementById(`media${index}`).value = '';
+    updateMediaPreview();
+}
     </script>
 </body>
 
